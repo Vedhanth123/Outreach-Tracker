@@ -2473,32 +2473,25 @@ async function onAuthSuccess() {
 }
 
 function initSupabase() {
-  const cfg = getConfig();
-  if (!cfg) {
-    document.getElementById('configSection').style.display = 'block';
-    document.getElementById('loginSection').style.display = 'none';
-    return;
-  }
+  // 1. Bypass localStorage entirely and use your hardcoded variables
+  try {
+    sb = window.supabase.createClient(supabaseUrl, supabaseKey);
+  } catch (e) {
+    showError('Failed to initialize Supabase. Check your hardcoded URL and key.');
+    return;
+  }
 
-  try {
-    sb = window.supabase.createClient(cfg.url, cfg.key);
-  } catch (e) {
-    showError('Failed to initialize Supabase. Check your URL and key.');
-    document.getElementById('configSection').style.display = 'block';
-    document.getElementById('loginSection').style.display = 'none';
-    return;
-  }
+  // 2. Force hide the setup screen and show the login screen
+  document.getElementById('configSection').style.display = 'none';
+  document.getElementById('loginSection').style.display = 'block';
 
-  document.getElementById('configSection').style.display = 'none';
-  document.getElementById('loginSection').style.display = 'block';
-
-  // Check if already logged in
-  sb.auth.getSession().then(async ({ data }) => {
-    if (data.session) {
-      currentUser = data.session.user;
-      await onAuthSuccess();
-    }
-  });
+  // 3. Check if you are already logged in on this specific browser
+  sb.auth.getSession().then(async ({ data }) => {
+    if (data.session) {
+      currentUser = data.session.user;
+      await onAuthSuccess();
+    }
+  });
 }
 
 // ============ INIT ============
